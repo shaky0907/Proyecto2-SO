@@ -1,22 +1,134 @@
+
 #include <Stepper.h>
+#include <Servo.h>
+
+const int buzzerPin = 6; // Pin connected to the buzzer
+const int servoPin = 7;
+
+const int dotDuration = 200; // Duration of a dot in milliseconds
+const int dashDuration = 600; // Duration of a dash in milliseconds
+const int symbolGap = 200; // Gap between symbols in milliseconds
+const int letterGap = 600; // Gap between letters in milliseconds
+const int wordGap = 1400; // Gap between words in milliseconds
+
+
 
 // Define the number of steps per revolution for your 28BYJ-48 motor
 const int stepsPerRevolution = 2048;
+const int moveSpaceWord = 50;
+const int moveDash = 50;
+const int movePoint = 20;
+const int moveNext = 20;
 
-// Initialize the stepper library with the pins used on your ULN2003 driver
 Stepper myStepper(stepsPerRevolution,8,10,9,11);
 
+
+const int upPen = 105;
+const int downPen =  120;
+Servo myServo;
+
+
+// Morse code dictionary
+const char* morseCode[] = {
+  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", 
+  "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", 
+  "..-", "...-", ".--", "-..-", "-.--", "--.."
+};
+
+// Function to play a dot
+void playDot() {
+  digitalWrite(buzzerPin, HIGH);
+  delay(dotDuration);
+  digitalWrite(buzzerPin, LOW);
+  delay(symbolGap);
+}
+
+// Function to play a dash
+void playDash() {
+  digitalWrite(buzzerPin, HIGH);
+  delay(dashDuration);
+  digitalWrite(buzzerPin, LOW);
+  delay(symbolGap);
+}
+
+void move_dot(){
+  myServo.write(downPen);
+  delay(500);
+  myStepper.step(movePoint);
+  delay(500);
+  myServo.write(upPen);
+  delay(500);
+  myStepper.step(movePoint);
+  
+}
+
+void move_dash(){
+  myServo.write(downPen);
+  delay(500);
+  myStepper.step(moveDash);
+  delay(500);
+  myServo.write(upPen);
+  delay(500);
+  myStepper.step(movePoint);
+}
+
+
+
+
+// Function to play Morse code for a given character
+void playMorse(char c) {
+  if (c >= 'A' && c <= 'Z') {
+    c = c - 'A';
+  } else if (c >= 'a' && c <= 'z') {
+    c = c - 'a';
+  } else {
+    return;
+  }
+
+  const char* morse = morseCode[c];
+  while (*morse) {
+    if (*morse == '.') {
+      playDot();
+      move_dot();
+    } else if (*morse == '-') {
+      playDash();
+      move_dash();
+    }
+    morse++;
+  }
+  delay(letterGap - symbolGap); // Adjust gap after each letter
+}
+
 void setup() {
-  // Set the speed of the stepper motor (RPM)
+
+  pinMode(buzzerPin, OUTPUT);
   myStepper.setSpeed(15); // Set to 15 RPM for smooth operation
+  myServo.attach(servoPin);
+
+  //start pen up
+  myServo.write(upPen);
+
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // Wait for serial port to connect. Needed for native USB port only
+  }
+  Serial.println("Enter a string to convert to Morse code:");
 }
 
 void loop() {
-  // Step forward 1 revolution
-  myStepper.step(stepsPerRevolution);
-  delay(1000); // Wait for 1 second
+  if (Serial.available()) {
+    String inputString = Serial.readStringUntil('\n');
+    inputString.trim();
 
-  // Step backward 1 revolution
-  myStepper.step(-stepsPerRevolution);
-  delay(1000); // Wait for 1 second
+    for (int i = 0; i < inputString.length(); i++) {
+      char c = inputString[i];
+      if (c == ' ') {
+        delay(wordGap - letterGap); // Adjust gap after each word
+      } else {
+        playMorse(c);
+        myStepper.step(moveSpaceWord);
+      }
+    }
+    Serial.println("Done!");
+  }
 }
