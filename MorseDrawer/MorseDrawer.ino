@@ -120,15 +120,21 @@ void loop() {
     String inputString = Serial.readStringUntil('\n');
     inputString.trim();
 
-    for (int i = 0; i < inputString.length(); i++) {
-      char c = inputString[i];
-      if (c == ' ') {
-        delay(wordGap - letterGap); // Adjust gap after each word
-      } else {
-        playMorse(c);
-        myStepper.step(moveSpaceWord);
-      }
+    if(inputString == "START"){
+      myStepper.step(150);
     }
-    Serial.println("Done!");
+    else{
+      for (int i = 0; i < inputString.length(); i++) {
+        char c = inputString[i];
+        if (c == ' ') {
+          delay(wordGap - letterGap); // Adjust gap after each word
+        } else {
+          playMorse(c);
+          myStepper.step(moveSpaceWord);
+        }
+      }
+      Serial.println("Done!");
+      myStepper.step(stepsPerRevolution);
+    } 
   }
 }
