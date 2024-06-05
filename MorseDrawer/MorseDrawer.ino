@@ -24,7 +24,7 @@ Stepper myStepper(stepsPerRevolution,8,10,9,11);
 
 
 const int upPen = 105;
-const int downPen =  120;
+const int downPen =  115;
 Servo myServo;
 
 
@@ -123,7 +123,26 @@ void loop() {
     if(inputString == "START"){
       myStepper.step(150);
     }
+    else if (inputString == "F"){
+      myStepper.step(stepsPerRevolution);
+    }
+    else if (inputString == "B"){
+      myStepper.step(-stepsPerRevolution);
+    }
+    else if (inputString == "1"){
+      myServo.write(downPen);
+    }
+    else if (inputString == "2"){
+      myServo.write(upPen);
+    }
+    else if (inputString == "."){
+      playDot();
+    }
+    else if (inputString == "-"){
+      playDash();
+    }
     else{
+      myStepper.step(150);
       for (int i = 0; i < inputString.length(); i++) {
         char c = inputString[i];
         if (c == ' ') {

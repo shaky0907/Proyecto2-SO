@@ -98,6 +98,13 @@ void RETRACT_PEN(int fd){
     send_word(fd, "2\n");   
 }
 
+void DOT_BUZZER(int fd){
+    send_word(fd, ".\n");   
+}
+
+void DASH_BUZZER(int fd){
+    send_word(fd, "-\n");   
+}
 
 /*
 * @description: Closes the serial port opened with open_serial_port
